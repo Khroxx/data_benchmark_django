@@ -42,6 +42,9 @@ Current public variables:
 - `DJANGO_SECRET_KEY=public-dev-only-benchmark-secret-key`
 - `DJANGO_DEBUG=true`
 - `DJANGO_ALLOWED_HOSTS=*`
+- `CORS_ALLOWED_ORIGIN=*`
+- `CORS_ALLOWED_METHODS=GET, OPTIONS`
+- `CORS_ALLOWED_HEADERS=Content-Type, Authorization`
 
 The Django settings load `.env` automatically before reading those values.
 

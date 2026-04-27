@@ -26,6 +26,9 @@ load_env_file(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "public-dev-only-benchmark-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+CORS_ALLOWED_ORIGIN = os.getenv("CORS_ALLOWED_ORIGIN", "*")
+CORS_ALLOWED_METHODS = os.getenv("CORS_ALLOWED_METHODS", "GET, OPTIONS")
+CORS_ALLOWED_HEADERS = os.getenv("CORS_ALLOWED_HEADERS", "Content-Type, Authorization")
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
@@ -34,6 +37,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "config.cors.SimpleCorsMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 
