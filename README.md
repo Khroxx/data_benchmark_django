@@ -27,6 +27,24 @@ Supported query params:
 - `size` or `sizeKb`
 - `runs`
 
+## Environment
+
+This repo is configured for public local testing. The default values are development-only and can be committed safely for this benchmark project.
+
+Public example env file:
+
+```bash
+cp .env.example .env
+```
+
+Current public variables:
+
+- `DJANGO_SECRET_KEY=public-dev-only-benchmark-secret-key`
+- `DJANGO_DEBUG=true`
+- `DJANGO_ALLOWED_HOSTS=*`
+
+The Django settings load `.env` automatically before reading those values.
+
 ## Local development
 
 Create a virtual environment:
