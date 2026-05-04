@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from statistics import median
 from time import perf_counter
 
@@ -8,6 +9,13 @@ from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
 
 
 DEFAULT_RUNS = 1
+BENCHMARK_DATA_DIR = Path(__file__).resolve().parent.parent / "benchmark_data"
+PAYLOAD_FILES = {
+    "flat-json": "flat.json",
+    "nested-json": "nested.json",
+    "csv": "table.csv",
+    "blob": "blob.txt",
+}
 
 
 def benchmark_view(request: HttpRequest) -> JsonResponse | HttpResponseNotAllowed:
@@ -77,36 +85,29 @@ def parse_runs(raw_runs: str) -> tuple[int, list[str]]:
 
 def generate_payload(payload_type: str, size_kb: int) -> bytes:
     target_bytes = size_kb * 1024
-
-    if payload_type == "flat-json":
-        return pad_content(
-            '{"id":1,"name":"benchmark-entry","status":"ok","category":"flat","active":true,"score":12345}',
-            target_bytes,
-        )
-    if payload_type == "nested-json":
-        return pad_content(
-            '{"meta":{"name":"benchmark","version":1},"items":[{"id":1,"tags":["alpha","beta"],"payload":{"kind":"nested","enabled":true,"metrics":{"count":3,"value":42}}}]}',
-            target_bytes,
-        )
-    if payload_type == "csv":
-        return pad_content(
-            "id,name,status,value\n1,benchmark,ok,42\n2,runner,ok,84\n",
-            target_bytes,
-        )
-    if payload_type == "blob":
-        return pad_content("benchmark-payload-blob-", target_bytes)
-
-    raise ValueError("invalid type query parameter")
+    return repeat_bytes(load_payload_fixture(payload_type), target_bytes)
 
 
-def pad_content(base: str, target_bytes: int) -> bytes:
+def load_payload_fixture(payload_type: str) -> bytes:
+    file_name = PAYLOAD_FILES.get(payload_type)
+    if not file_name:
+        raise ValueError("invalid type query parameter")
+
+    path = BENCHMARK_DATA_DIR / file_name
+    try:
+        return path.read_bytes()
+    except OSError as exc:
+        raise ValueError(f"benchmark data file not found: {file_name}") from exc
+
+
+def repeat_bytes(base: bytes, target_bytes: int) -> bytes:
     if target_bytes <= 0:
         return b""
 
-    if len(base) >= target_bytes:
-        return base[:target_bytes].encode("utf-8")
+    if not base:
+        return b"\0" * target_bytes
 
-    parts: list[str] = []
+    parts: list[bytes] = []
     current_length = 0
     while current_length < target_bytes:
         remaining = target_bytes - current_length
@@ -118,7 +119,7 @@ def pad_content(base: str, target_bytes: int) -> bytes:
         parts.append(base[:remaining])
         current_length += remaining
 
-    return "".join(parts).encode("utf-8")
+    return b"".join(parts)
 
 
 def average(values: list[int]) -> float:
